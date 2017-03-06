@@ -1,79 +1,58 @@
 require 'net/https'
 require 'securerandom'
 require 'json'
+require 'pixiv/client/exceptions'
+require 'pixiv/client/access_token'
+require 'pixiv/client/api_wrapper'
 
+# Making General Operation
+# Authorization related ripped to access_token
 module Pixiv
   class Client
 
-    CLIENT_ID  = "BVO2E8vAAikgUBW8FYpi6amXOjQj".freeze
-    CLIENT_SECRET = "LI1WsFUDrrquaINOdarrJclCrkTtc3eojCOswlog".freeze
-    OAUTH_ENDPOINT = "https://oauth.secure.pixiv.net/auth/token".freeze
+    include APIWrapper
+
     API_ENDPOINT = "https://app-api.pixiv.net/".freeze
 
     def initialize user, pass, opts = {}
-      @username = nil
-      @password = nil
-      @cache_auth = opts[:cache_auth] || false
-      @device_token = SecureRandom.hex(16)
-      @access_token = ""
-      authorize user, pass
+      @access_token = AccessToken.new user, pass
     end
 
-    def authorize user = nil, pass = nil
+    def make_request type, uri, params = {}, header = {}
 
-      user, pass = @username, @password if user.nil? && pass.nil? && !cache_auth?
+      uri = URI(URI.join(API_ENDPOINT, uri)) if uri =~ /^\//
 
-      D "get token with #{user}:#{pass}"
+      case type
+      when /get/i
+        uri.query = URI.encode_www_form(params)
+        req = Net::HTTP::Get.new uri, header
+      when /post/i
+        req = Net::HTTP::Post.new uri, header
+        req.form_data = params
+      end
 
-      resp = Net::HTTP.post_form URI(OAUTH_ENDPOINT),
-                                 client_id:     CLIENT_ID,
-                                 client_secret: CLIENT_SECRET,
-                                 grant_type:    "password",
-                                 username:      user,
-                                 password:      pass,
-                                 device_token:  @device_token,
-                                 get_secure_url: true
+      @access_token.sign req
+      resp = nil
+      Net::HTTP.start(URI(API_ENDPOINT).hostname, use_ssl: true) do |http|
+        resp = http.request req
+      end
 
-      raise AuthorizationFailed, resp.body unless %w{ 200 301 302 }.include? resp.code
+      unless resp.is_a? Net::HTTPOK
+        raise RequestError.new(resp), "unexpected response code `#{resp.code}`, expect `200`"
+      end
 
-      resp = JSON.parse(resp.body)
-
-      @access_token = resp["response"]["access_token"]
-
-      @username, @password = user, pass if user && pass && cache_auth?
-    end
-
-    def cache_auth?; return @cache_auth; end
-    def cache_auth!; @cache_auth = true; end
-
-    def request req
-      req["Authorization"] = "Bearer %s" % [ @access_token ]
-      http = Net::HTTP.new("app-api.pixiv.net", 443)
-      http.use_ssl = true
-      resp = http.request req
-      p JSON.parse resp.body
+      JSON.parse resp.body
     end
 
     def get uri, params = {}, header = {}
-      uri = URI.join(API_ENDPOINT, uri) if uri.is_a? String and uri =~ /^\//
-      (uri = URI(uri)).query = URI.encode_www_form(params)
-      D uri
-      request Net::HTTP::Get.new(uri, header)
+      make_request :get, uri, params, header
     end
 
     def post uri, params = {}, header = {}
-      req = Net::HTTP::Post.new URI(uri), header
-      req.form_data = params
-      request req
+      make_request :post, uri, params, header
     end
 
     def download uri
     end
-
-    Error = Class.new(StandardError)
-    AuthorizationError = Class.new(Error)
-    AuthorizationFailed = Class.new(AuthorizationError)
-    AuthorizationExpired = Class.new(AuthorizationError)
-
   end
 end
