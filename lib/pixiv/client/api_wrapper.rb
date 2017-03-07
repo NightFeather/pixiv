@@ -18,12 +18,15 @@ module Pixiv
       end
 
       def get_user_illusts id, type = "illust"
-        get '/v1/user/illusts', { user_id: id, type: type }
+        resp = get '/v1/user/illusts', { user_id: id, type: type }
+        resp["illusts"].map { |il| Pixiv::Illust.new(il) }
       end
 
       def get_illust id
         resp = get '/v1/illust/detail', illust_id: id
-        resp["illust"]
+        resp = resp["illust"]
+        resp["metadata"] = get_ugoira_metadata id if resp["type"] == 'ugoira'
+        Pixiv::Illust.new resp
       end
 
       def get_ugoira_metadata id
