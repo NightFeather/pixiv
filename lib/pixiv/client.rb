@@ -19,7 +19,6 @@ module Pixiv
     end
 
     def make_request type, uri, params = {}, header = {}
-
       uri = URI(URI.join(API_ENDPOINT, uri)) if uri =~ /^\//
 
       case type
@@ -50,9 +49,6 @@ module Pixiv
 
     def post uri, params = {}, header = {}
       make_request :post, uri, params, header
-    end
-
-    def download uri
     end
   end
 end
