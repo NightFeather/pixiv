@@ -10,6 +10,14 @@ Unless I want to make it work as a fully functioned Pixiv library someday.
 
 ## Usage
 
+### Installation
+
+`gem install pixiv, github: 'nightfeather/pixiv'`
+
+also you have `ImageMagick` and `unzip` installed with commands: `convert` and `unzip` available.
+
+p.s. convert is needed 'cause `RMagick` can't be easily configured when you have per-image delays.
+
 ### Initialization
 Fetch essential oauth token.
 It will auto refresh before sending request when expired.
