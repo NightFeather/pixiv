@@ -9,6 +9,8 @@ module Pixiv
                   :create_date, :width, :height,
                   :rate,
                   :view_count, :bookmark_count, :comment_count
+
+      attr_reader :page_link
 =begin
 v "id"
 v "title"
@@ -37,6 +39,7 @@ v "total_comments"              => :comment_count
 
       def initialize obj
         extract obj.dup
+        @page_link = "http://p.tl/i/" + @id
       end
 
       def muted?; @is_muted; end
