@@ -2,16 +2,31 @@ require 'securerandom'
 
 module Pixiv
   class UgoiraComposer
-    def initialize ugoira, zipname, template, tempdir = nil
+
+    def initialize ugoira, zipname, output, tempdir = nil
       @ugoira   = ugoira
       @zipname  = zipname
-      @output   = StringTemplate.convert template, ugoira
+      @output   = output
       @tempdir  = tempdir || '/tmp/'
       @tempdir  = File.join(@tempdir, "ugoira2mp4-" + SecureRandom.hex(8))
       @metafile = File.join @tempdir, 'meta.txt'
       system 'mkdir', '-p', @tempdir
     end
-  
+ 
+    def compose clean_after_build = true
+      decompress
+      type = File.extname @output
+      case type
+      when ".gif"
+        compose_gif
+      when ".mp4"
+        build_concat_meta
+        compose_mp4
+      else
+        raise StandardError, "unxpected filetype of `#{type}`"
+      end
+    end
+ 
     def decompress
       system 'unzip', @zipname, '-d', @tempdir
     end
@@ -36,20 +51,14 @@ module Pixiv
              '-safe', '0' ,
              '-i', @metafile,
              '-pix_fmt', 'yuv420p',
-             @output + '.mp4'
+             @output
     end
 
     def compose_gif
       res = @ugoira.metadata["frames"].map do |o|
         [ '-delay', ((o["delay"]) / 500.0).to_s, File.join(@tempdir, o["file"]) ]
       end
-      system 'convert', *res.flatten, '-loop', '0' , @output + '.gif'
-    end
-
-    def doit
-      decompress
-      build_concat_meta
-      compose_mp4
+      system 'convert', *res.flatten, '-loop', '0' , @output
     end
 
     def cleanup
