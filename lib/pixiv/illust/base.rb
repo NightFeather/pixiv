@@ -9,9 +9,6 @@ module Pixiv
                   :create_date, :width, :height,
                   :rate,
                   :view_count, :bookmark_count, :comment_count
-
-      attr_reader :client # for downloading
-
 =begin
 v "id"
 v "title"
