@@ -1,3 +1,5 @@
+require 'pixiv/downloader/task'
+
 module Pixiv
   class Downloader
 
@@ -8,37 +10,20 @@ module Pixiv
       @suffix = suffix
     end
 
-    def download_illust illust, template = "?title?", progress_cb = nil, finish_cb = nil
-      filename = Pixiv::StringTemplate.convert template, illust
-      uri = illust.original
-      filename += File.extname(uri)
-      download URI(uri), filename, progress_cb, finish_cb
-    end
-
-    def download_manga manga, template = "?user? - ?title?/?idx?", progress_cb = nil, finish_cb = nil
-      manga.images.each_pair.map do |idx, image|
-        filename = Pixiv::StringTemplate.convert template, manga, idx: idx.to_s.rjust(2,?0)
-        uri = image
-        filename += File.extname(uri)
-        download URI(uri), filename, progress_cb, finish_cb
+    def execute task
+      unless task.is_a? Pixiv::Downloader::Task
+        raise TypeError, "expect instance of `Pixiv::Downloader::Task`, get `#{task.class}`"
+      end
+      task.filelist.map do |file|
+        _download file[:src], file[:dest], task.progress_callback, task.finish_callback
       end
     end
 
-    def download_ugoira_cover ugoira, template = "?user? - ?title? - cover", progress_cb = nil, finish_cb = nil
-      filename = Pixiv::StringTemplate.convert template, ugoira
-      uri = ugoira.cover
-      filename += File.extname(uri)
-      download URI(uri), filename, progress_cb, finish_cb
+    def download artwork
+      execute artwork.download_meta
     end
 
-    def download_ugoira ugoira, template = "?user? - ?title?", progress_cb = nil, finish_cb = nil
-      filename = Pixiv::StringTemplate.convert template, ugoira
-      uri = ugoira.zip_url
-      filename += File.extname(uri)
-      download URI(uri), filename, progress_cb, finish_cb
-    end
-
-    def download uri, path, progress_cb = nil, finish_cb = nil
+    def _download uri, path, progress_cb = nil, finish_cb = nil
       length = 0
       uri = URI(uri)
 
