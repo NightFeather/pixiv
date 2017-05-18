@@ -5,15 +5,19 @@ require 'pixiv/vision/illust'
 module Pixiv
   module Vision
 
-    BASEURL = 'http://www.pixivision.net/%s/a/%d'
+    BASEURL = 'https://www.pixivision.net/%s/a/%d'
 
     def self.new page_id, lang='ja'
       uri = URI(BASEURL % [ lang, page_id.to_i ])
 
       resp = nil
-      Net::HTTP.start uri.host, uri.port do |http|
-        resp = http.get uri, 'accept-language': lang
+      http_handle = Net::HTTP.new uri.host, uri.port
+      http_handle.set_debug_output STDOUT
+      http_handle.use_ssl = true
+      http_handle.start do |http|
+        resp = http.get uri, 'Accept-Language': lang
       end
+
       return nil if resp.is_a?(Net::HTTPClientError) or resp.is_a?(Net::HTTPServerError)
 
       dom = Nokogiri.parse resp.body

@@ -34,11 +34,10 @@ module Pixiv
         resp["ugoira_metadata"]
       end
 
-      # 搜索 (Search) (无需登录)
-      # search_target - 搜索类型
-      #   partial_match_for_tags  - 标签部分一致
-      #   exact_match_for_tags    - 标签完全一致
-      #   title_and_caption       - 标题说明文
+      # search_target
+      #   partial_match_for_tags
+      #   exact_match_for_tags
+      #   title_and_caption
       # sort: [date_desc, date_asc]
       # duration: [within_last_day, within_last_week, within_last_month]
 

@@ -39,7 +39,7 @@ v "total_comments"              => :comment_count
 
       def initialize obj
         extract obj.dup
-        @page_link = "http://p.tl/i/" + @id
+        @page_link = "http://p.tl/i/%d" % @id
       end
 
       def muted?; @is_muted; end

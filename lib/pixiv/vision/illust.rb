@@ -2,7 +2,7 @@
 module Pixiv
   module Vision
     class Illust < Base
-  
+
       attr_reader :eyecatch, :illusts
 
       def parse
@@ -13,21 +13,17 @@ module Pixiv
         extract_eyecatch
         extract_illusts
       end
- 
+
       def extract_eyecatch
-        eyecatch_el = @dom.css(".am__header ._article-illust-eyecatch")[0]
-        info = eyecatch_el.css(".aie__info")[0]
-        user_link = info.css(".aie__user-name .inner-link")[0].attr('href')
+        eyecatch_el = @dom.css(".am__eyecatch-container")[0]
+        link = eyecatch_el.css('.inner-link')[0].attr('href')
+        id = link.match(/illust_id=(\d+)/)[1]
+        img = eyecatch_el.css('._article-illust-eyecatch')[0].attr('style').match(/url\(\'(.+?)\'\)/)[1]
+
         @eyecatch = {
-          id: info.css(".aie__title .inner-link")[0].attr('data-gtm-label'),
-          link: info.css(".aie__title .inner-link")[0].attr('href'),
-          img: eyecatch_el.css(".inner-link img")[0].attr('src'),
-          title: info.css(".aie__title")[0].text.strip,
-          user: {
-            id:   user_link.match(/id=(\d+)/)[1],
-            name: info.css(".aie__user-name .inner-link")[0].text.strip,
-            link: user_link
-          }
+          id: id,
+          link: link,
+          img: img
         }
       end
 
@@ -52,7 +48,7 @@ module Pixiv
           @illusts << res
         end
       end
- 
+
     end
   end
 end
