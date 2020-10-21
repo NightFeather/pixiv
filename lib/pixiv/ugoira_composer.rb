@@ -47,10 +47,11 @@ module Pixiv
   
     def compose_mp4
       system 'ffmpeg',
-             '-f', 'concat', 
+             '-f', 'concat',
              '-safe', '0' ,
              '-i', @metafile,
              '-pix_fmt', 'yuv420p',
+             '-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2',
              @output
     end
 
