@@ -3,6 +3,7 @@ module Pixiv
 end
 
 require "pixiv/version"
+require 'pixiv/constants'
 require 'pixiv/user'
 require 'pixiv/illust'
 require 'pixiv/client'

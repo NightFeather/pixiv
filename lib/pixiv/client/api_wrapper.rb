@@ -3,9 +3,9 @@ module Pixiv
     module APIWrapper
 
       SEARCH_DEFAULT_OPT = {
-        search_target: "partial_match_for_tags",
-        sort: "date_desc",
-        duration: "within_last_day"
+        search_target: Pixiv::Search::Match::TagsExact,
+        sort: Pixiv::Search::Sort::DSC,
+        duration: Pixiv::Search::Duration::LastDay
       }
 
       def get_recommended_users
@@ -43,8 +43,10 @@ module Pixiv
 
       def search keyword, opts = {}
         get '/v1/search/illust', {
-          word: keyword
-        }.merge(SEARCH_DEFAULT_OPT).merge(opts)
+          **SEARCH_DEFAULT_OPT,
+          word: keyword,
+          **opts
+        }
       end
 
       def fetch_updates restrict = "all"
